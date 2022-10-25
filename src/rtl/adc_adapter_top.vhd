@@ -42,55 +42,43 @@ end adc_adapter_top;
 
 architecture rtl of adc_adapter_top is
 
+  -----------------------------------------------------------------------------
+  -- Constants
+  -----------------------------------------------------------------------------
   constant DDR_DATA_DELAY         : integer := 0;
   constant DDR_DELAY_REF_CLK_FREQ : real    := 500.0;
 
-  signal clk_125_s     : std_logic;
-  signal debug_leds_s  : std_logic_vector(7 downto 0) := x"37";
-  signal rst_sn        : std_logic;
+  -----------------------------------------------------------------------------
+  -- Signals
+  -----------------------------------------------------------------------------
+  -- Control and status lines
+  signal clk_125_s          : std_logic;
+  signal debug_leds_s       : std_logic_vector(7 downto 0) := x"37";
+  signal rst_sn             : std_logic;
 
+  -- DDR primitive control lines
+  signal ddr_rst_s          : std_logic;
+
+  -- ADC signals
   signal adc_data_s         : std_logic_vector((NUM_ADC_BITS/2)-1 downto 0);
   signal adc_delayed_data_s : std_logic_vector((NUM_ADC_BITS/2)-1 downto 0);
+  signal adc_clk_s          : std_logic;
+  signal adc_clk_sn         : std_logic;
+  signal adc_sample_r       : std_logic_vector(NUM_ADC_BITS-1 downto 0);
+  signal adc_data_or_s      : std_logic_vector(0 downto 0);
 
-  signal adc_clk_s     : std_logic;
-  signal adc_clk_sn    : std_logic;
-
-  signal adc_sample_r  : std_logic_vector(NUM_ADC_BITS-1 downto 0);
-
+  -- FIFO signals
   signal s_axis_cdc_tready_s : std_logic;
   signal s_axis_cdc_tvalid_s : std_logic;
   signal m_axis_tready_s     : std_logic;
 
-  -- Overrange output pins
-  signal adc_data_or_s : std_logic_vector(0 downto 0);
-
-
-  -- DDR control lines
-  signal ddr_rst_s : std_logic;
-
-
-  -- FIFO
   signal almost_full_s  : std_logic;
   signal almost_empty_s : std_logic;
 
 
-  component sample_cdc_fifo is
-    port (
-      s_axis_aresetn : in STD_LOGIC;
-      s_axis_aclk : in STD_LOGIC;
-      s_axis_tvalid : in STD_LOGIC;
-      s_axis_tready : out STD_LOGIC;
-      s_axis_tdata : in STD_LOGIC_VECTOR ( 15 downto 0 );
-      s_axis_tuser : in STD_LOGIC_VECTOR ( 0 to 0 );
-      m_axis_aclk : in STD_LOGIC;
-      m_axis_tvalid : out STD_LOGIC;
-      m_axis_tready : in STD_LOGIC;
-      m_axis_tdata : out STD_LOGIC_VECTOR ( 15 downto 0 );
-      m_axis_tuser : out STD_LOGIC_VECTOR ( 0 to 0 );
-      almost_full : out STD_LOGIC
-      );
-  end component sample_cdc_fifo;
-
+  -----------------------------------------------------------------------------
+  -- Components
+  -----------------------------------------------------------------------------
   component sample_fifo is
     port (
       s_axis_aresetn     : in  STD_LOGIC;
@@ -116,13 +104,14 @@ architecture rtl of adc_adapter_top is
 
 begin
 
-  rst_sn    <= not reset;
-  up_status <= debug_leds_s;
-  ddr_rst_s <= reset;
-  adc_clk_sn <= adc_clk_s;
+  rst_sn              <= not reset;
+  up_status           <= debug_leds_s;
+  ddr_rst_s           <= reset;
+  adc_clk_sn          <= adc_clk_s;
   s_axis_cdc_tvalid_s <= adc_data_or_s(0);
-  -- m_axis_tready_s <= adc_data_or_s(0);
+  -- m_axis_tready_s     <= adc_data_or_s(0);
 
+  -- TODO: Drive FIFO write using register and FIFO read using internal logic
   process(clk_125_s)
   begin
     if rising_edge(clk_125_s) then
@@ -239,27 +228,6 @@ begin
   -----------------------------------------------------------------------------
   -- CDC FIFO
   -----------------------------------------------------------------------------
-  -- cdc_fifo: entity work.sample_cdc_fifo(rtl)
-  -- cdc_fifo: entity work.sample_cdc_fifo(rtl)
-  -- cdc_fifo: component sample_cdc_fifo
-  --   port map (
-  --     s_axis_aresetn => reset,
-  --     almost_full    => open,
-
-  --     s_axis_aclk    => adc_clk_s,
-  --     s_axis_tdata   => adc_sample_r,
-  --     s_axis_tready  => s_axis_cdc_tready_s,
-  --     s_axis_tuser   => adc_data_or_s,
-  --     s_axis_tvalid  => s_axis_cdc_tvalid_s,
-
-  --     m_axis_aclk    => clk_125_s,
-  --     m_axis_tdata   => open,
-  --     m_axis_tready  => m_axis_tready_s,
-  --     m_axis_tuser   => open,
-  --     m_axis_tvalid  => open
-  --     );
-
-
   cdc_fifo: component sample_fifo
     port map (
       s_axis_aresetn     => rst_sn,

@@ -10,7 +10,7 @@ end adc_adapter_tb;
 
 architecture rtl of adc_adapter_tb is
   -----------------------------------------------------------------------------
-  -- Signals
+  -- Constants
   -----------------------------------------------------------------------------
   constant NUM_ADC_BITS_C    : integer := 16;
   constant ADC_CLK_PERIOD_C  : time    := 8 ns; -- 125 MHz
