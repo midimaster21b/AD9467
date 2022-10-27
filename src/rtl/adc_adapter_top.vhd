@@ -7,21 +7,20 @@ use UNISIM.vcomponents.all;
 
 entity adc_adapter_top is
   generic (
-    NUM_ADC_BITS : integer := 16
+    NUM_ADC_BITS : integer := 16;
+    AXI_REGS_ADDR_WIDTH_G : integer := 5;
+    AXI_REGS_DATA_WIDTH_G : integer := 32
     );
   port (
     -- Clock and reset lines
     clk_125_p     : in    std_logic;
     clk_125_n     : in    std_logic;
+    spi_clk_in    : in    std_logic;
 
     reset         : in    std_logic;
 
-    -- UART communication
-    uart_txd      : in    std_logic;
-    uart_rxd      : out   std_logic;
-
     -- Status LEDs
-    up_status     : out   std_logic_vector(7 downto 0);
+    debug_leds_p  : out   std_logic_vector(7 downto 0);
 
     -- ADC Data Interface
     adc_clk_in_p  : in    std_logic;
@@ -36,7 +35,30 @@ entity adc_adapter_top is
     ad9517_csn    : out   std_logic;
     spi_csn       : out   std_logic;
     spi_clk       : out   std_logic;
-    spi_sdio      : inout std_logic
+    spi_sdio      : inout std_logic;
+
+    -- AXI Register Interface
+    s_axi_regs_aclk_p    : in    std_logic;
+    s_axi_regs_aresetn_p : in    std_logic;
+    s_axi_regs_awaddr_p  : in    std_logic_vector(AXI_REGS_ADDR_WIDTH_G-1 downto 0);
+    s_axi_regs_awprot_p  : in    std_logic_vector(2 downto 0);
+    s_axi_regs_awvalid_p : in    std_logic;
+    s_axi_regs_awready_p : out   std_logic;
+    s_axi_regs_wdata_p   : in    std_logic_vector(AXI_REGS_DATA_WIDTH_G-1 downto 0);
+    s_axi_regs_wstrb_p   : in    std_logic_vector((AXI_REGS_DATA_WIDTH_G/8)-1 downto 0);
+    s_axi_regs_wvalid_p  : in    std_logic;
+    s_axi_regs_wready_p  : out   std_logic;
+    s_axi_regs_bresp_p   : out   std_logic_vector(1 downto 0);
+    s_axi_regs_bvalid_p  : out   std_logic;
+    s_axi_regs_bready_p  : in    std_logic;
+    s_axi_regs_araddr_p  : in    std_logic_vector(AXI_REGS_ADDR_WIDTH_G-1 downto 0);
+    s_axi_regs_arprot_p  : in    std_logic_vector(2 downto 0);
+    s_axi_regs_arvalid_p : in    std_logic;
+    s_axi_regs_arready_p : out   std_logic;
+    s_axi_regs_rdata_p   : out   std_logic_vector(AXI_REGS_DATA_WIDTH_G-1 downto 0);
+    s_axi_regs_rresp_p   : out   std_logic_vector(1 downto 0);
+    s_axi_regs_rvalid_p  : out   std_logic;
+    s_axi_regs_rready_p  : in    std_logic
     );
 end adc_adapter_top;
 
@@ -105,7 +127,7 @@ architecture rtl of adc_adapter_top is
 begin
 
   rst_sn              <= not reset;
-  up_status           <= debug_leds_s;
+  debug_leds_p        <= debug_leds_s;
   ddr_rst_s           <= reset;
   adc_clk_sn          <= adc_clk_s;
   s_axis_cdc_tvalid_s <= adc_data_or_s(0);
@@ -228,7 +250,7 @@ begin
   -----------------------------------------------------------------------------
   -- CDC FIFO
   -----------------------------------------------------------------------------
-  cdc_fifo: component sample_fifo
+  cdc_fifo: sample_fifo
     port map (
       s_axis_aresetn     => rst_sn,
       s_axis_aclk        => adc_clk_s,
@@ -249,5 +271,49 @@ begin
       almost_full        => almost_full_s
       );
 
+
+  -----------------------------------------------------------------------------
+  -- SPI
+  -----------------------------------------------------------------------------
+  u_spi: entity work.three_wire_spi_top(rtl)
+    generic map (
+      NUM_ADDR_BITS_G => 13,
+      NUM_DATA_BITS_G =>  8,
+
+      AXI_REGS_ADDR_WIDTH_G =>  5,
+      AXI_REGS_DATA_WIDTH_G => 32
+      )
+    port map (
+      -- Control lines
+      spi_clk_in_p         => spi_clk_in,
+
+      -- SPI interface
+      sclk_p               => spi_clk,
+      sdio_p               => spi_sdio,
+      csn_p                => spi_csn,
+
+      -- AXI
+      s_axi_regs_aclk_p    => s_axi_regs_aclk_p,
+      s_axi_regs_aresetn_p => s_axi_regs_aresetn_p,
+      s_axi_regs_awaddr_p  => s_axi_regs_awaddr_p,
+      s_axi_regs_awprot_p  => s_axi_regs_awprot_p,
+      s_axi_regs_awvalid_p => s_axi_regs_awvalid_p,
+      s_axi_regs_awready_p => s_axi_regs_awready_p,
+      s_axi_regs_wdata_p   => s_axi_regs_wdata_p,
+      s_axi_regs_wstrb_p   => s_axi_regs_wstrb_p,
+      s_axi_regs_wvalid_p  => s_axi_regs_wvalid_p,
+      s_axi_regs_wready_p  => s_axi_regs_wready_p,
+      s_axi_regs_bresp_p   => s_axi_regs_bresp_p,
+      s_axi_regs_bvalid_p  => s_axi_regs_bvalid_p,
+      s_axi_regs_bready_p  => s_axi_regs_bready_p,
+      s_axi_regs_araddr_p  => s_axi_regs_araddr_p,
+      s_axi_regs_arprot_p  => s_axi_regs_arprot_p,
+      s_axi_regs_arvalid_p => s_axi_regs_arvalid_p,
+      s_axi_regs_arready_p => s_axi_regs_arready_p,
+      s_axi_regs_rdata_p   => s_axi_regs_rdata_p,
+      s_axi_regs_rresp_p   => s_axi_regs_rresp_p,
+      s_axi_regs_rvalid_p  => s_axi_regs_rvalid_p,
+      s_axi_regs_rready_p  => s_axi_regs_rready_p 
+      );
 
 end rtl;
