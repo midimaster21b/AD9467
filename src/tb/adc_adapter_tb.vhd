@@ -5,6 +5,8 @@ use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.vcomponents.all;
 
+use std.env.finish;
+
 entity adc_adapter_tb is
 end adc_adapter_tb;
 
@@ -97,6 +99,14 @@ begin
   adc_clk_in_sn  <= not adc_clk_in_s;
   adc_data_in_sn <= not adc_data_in_s;
   adc_data_or_sn <= not adc_data_or_s;
+
+  process
+  begin
+    wait for 100 us;
+    finish;
+    wait;
+  end process;
+
 
   -- u_dut: entity adc_adapter_top(rtl)
   u_dut: adc_adapter_top

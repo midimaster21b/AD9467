@@ -7,6 +7,8 @@ filesets:
     files:
       - src/rtl/adc_adapter_top.vhd
     file_type: vhdlSource
+    depend:
+      - midimaster21b:comm:three-wire-spi-ad:0.1.0
 
   tb:
     files:
@@ -43,4 +45,4 @@ targets:
       - zcu106
     tools:
       vivado:
-	part: xczu7ev-ffvc1156-2-e
+        part: xczu7ev-ffvc1156-2-e
