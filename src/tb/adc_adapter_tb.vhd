@@ -5,6 +5,9 @@ use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.vcomponents.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 use std.env.finish;
 
 entity adc_adapter_tb is

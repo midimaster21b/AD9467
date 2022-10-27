@@ -5,6 +5,9 @@ use IEEE.NUMERIC_STD.ALL;
 library UNISIM;
 use UNISIM.vcomponents.all;
 
+library xpm;
+use xpm.vcomponents.all;
+
 entity adc_adapter_top is
   generic (
     NUM_ADC_BITS : integer := 16;
