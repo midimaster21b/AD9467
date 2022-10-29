@@ -3,6 +3,11 @@ name: midimaster21b:dsp:ad9467:0.1.0
 description: A basic interface to the Analog Digital AD9467 ADC
 
 filesets:
+  glbl:
+    files:
+      - src/tb/glbl.v
+    file_type: verilogSource
+
   ip:
     files:
       - ip/ip_gen/ip_gen.gen/sources_1/ip/sample_fifo/hdl/axis_infrastructure_v1_1_vl_rfs.v
@@ -48,7 +53,11 @@ targets:
   sim:
     description: Simulate the design
     default_tool: xsim
+    tools:
+      xsim:
+        xelab_options: [-L, unisims_ver, -L, unimacro_ver, -L, secureip, -L, xpm, glbl]
     filesets:
+      - glbl
       - sim_ip
       - rtl
       - tb
