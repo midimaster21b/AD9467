@@ -40,6 +40,14 @@ filesets:
     files:
       - src/constraints/ad9467_pins.xdc: {file_type: xdc}
 
+  bd_script:
+    files:
+      - src/bd/top_generated.tcl: {file_type: tclSource}
+
+  pkg:
+    files:
+      - src/scripts/pkg_ip.tcl: {file_type:tclSource}
+
 
 targets:
   # Special FuseSoC target
@@ -47,6 +55,7 @@ targets:
     filesets:
       - ip
       - rtl
+      - pkg
     toplevel: adc_adapter_top
 
   # Simulation target
