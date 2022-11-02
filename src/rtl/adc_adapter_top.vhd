@@ -130,7 +130,7 @@ begin
   debug_leds_p        <= debug_leds_s;
   ddr_rst_s           <= reset;
   adc_clk_sn          <= adc_clk_s;
-  s_axis_cdc_tvalid_s <= adc_data_or_s(0);
+  -- s_axis_cdc_tvalid_s <= adc_data_or_s(0);
   -- m_axis_tready_s     <= adc_data_or_s(0);
 
   -- TODO: Drive FIFO write using register and FIFO read using internal logic
